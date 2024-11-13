@@ -134,6 +134,13 @@ func (ep *EthereumParser) updateBlockNumber() {
 	sleepTime := 10 * time.Second
 	for {
 		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					go ep.updateBlockNumber()
+					log.Printf("updateBlockNumber panicked with %v", r)
+				}
+			}()
+
 			content := `{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":0}`
 			request, err := http.NewRequest(http.MethodPost, ethereumRPCUrl, strings.NewReader(content))
 			if err != nil {

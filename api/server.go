@@ -26,6 +26,7 @@ func (s *Server) Start() error {
 		}
 
 		subcribed := s.parser.Subscribe(address)
+		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(map[string]bool{
 			"success": subcribed,
 		})
@@ -33,12 +34,38 @@ func (s *Server) Start() error {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	})
+
+	http.HandleFunc("GET /block", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+
+		err := json.NewEncoder(w).Encode(map[string]int{
+			"block": s.parser.GetCurrentBlock(),
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+
+	http.HandleFunc("GET /transactions", func(w http.ResponseWriter, r *http.Request) {
+		address := r.URL.Query().Get("address")
+		transactions := s.parser.GetTransactions(address)
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(map[string]any{
+			"transactions": transactions,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	})
 
 	http.HandleFunc("GET /all", func(w http.ResponseWriter, r *http.Request) {
 		all := s.parser.ReadAll()
 		subscribers := s.parser.ReadAllSubscribers()
+
+		w.Header().Set("Content-Type", "application/json")
 
 		err := json.NewEncoder(w).Encode(map[string]any{
 			"transactions": all,
@@ -47,33 +74,6 @@ func (s *Server) Start() error {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		w.Header().Add("Content-Type", "application/json")
-	})
-
-	http.HandleFunc("GET /block", func(w http.ResponseWriter, r *http.Request) {
-		err := json.NewEncoder(w).Encode(map[string]int{
-			"block": s.parser.GetCurrentBlock(),
-		})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-	})
-
-	http.HandleFunc("GET /transactions", func(w http.ResponseWriter, r *http.Request) {
-		address := r.URL.Query().Get("address")
-		transactions := s.parser.GetTransactions(address)
-		err := json.NewEncoder(w).Encode(map[string]any{
-			"transactions": transactions,
-		})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
 	})
 
 	log.Printf("listening on port %s:%s", "localhost", "1234")
