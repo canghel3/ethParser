@@ -9,6 +9,6 @@ type Parser interface {
 	Subscribe(address string) bool
 	// list of inbound or outbound transactions for an address
 	GetTransactions(address string) []models.Transaction
-	ReadAll() []models.Transaction
+	ReadAllTransactions() []models.Transaction
 	ReadAllSubscribers() []string
 }

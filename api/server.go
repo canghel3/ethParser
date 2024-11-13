@@ -62,7 +62,7 @@ func (s *Server) Start() error {
 	})
 
 	http.HandleFunc("GET /all", func(w http.ResponseWriter, r *http.Request) {
-		all := s.parser.ReadAll()
+		all := s.parser.ReadAllTransactions()
 		subscribers := s.parser.ReadAllSubscribers()
 
 		w.Header().Set("Content-Type", "application/json")

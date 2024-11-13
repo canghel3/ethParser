@@ -9,6 +9,6 @@ type Storage interface {
 	Read(address string) ([]models.Transaction, error)
 	Add(address string, transaction models.Transaction) error
 	Delete(address string) error
-	ReadAll() []models.Transaction
+	ReadAllTransactions() []models.Transaction
 	ReadAllSubscribers() []string
 }

@@ -25,18 +25,17 @@ type EthereumParser struct {
 
 func NewEthereumParser() *EthereumParser {
 	ep := &EthereumParser{
-		rw:           sync.RWMutex{},
-		client:       http.Client{},
-		currentBlock: 0,
-		registry:     storage.NewMemoryStorage(),
+		rw:       sync.RWMutex{},
+		client:   http.Client{},
+		registry: storage.NewMemoryStorage(),
 	}
 
 	go ep.updateBlockNumber()
 	return ep
 }
 
-func (ep *EthereumParser) ReadAll() []models.Transaction {
-	return ep.registry.ReadAll()
+func (ep *EthereumParser) ReadAllTransactions() []models.Transaction {
+	return ep.registry.ReadAllTransactions()
 }
 
 func (ep *EthereumParser) ReadAllSubscribers() []string {
@@ -68,10 +67,18 @@ func (ep *EthereumParser) Subscribe(address string) bool {
 }
 
 func (ep *EthereumParser) subscriber(address string) {
-	previous := ep.currentBlockHex
+	var previous string
+
+	defer func() {
+		if r := recover(); r != nil {
+			go ep.subscriber(address)
+			log.Printf("subcriber for %s panicked: %v", address, r)
+		}
+	}()
 
 	for {
 		if ep.currentBlockHex != previous {
+			previous = ep.currentBlockHex
 			blockByNumber := ep.getBlockByNumber(ep.currentBlockHex)
 			if blockByNumber != nil {
 				ep.processBlockTransactions(address, blockByNumber.Result.Transactions)

@@ -28,7 +28,7 @@ func (ms *MemoryStorage) Create(address string) error {
 	return fmt.Errorf("address %s already exists", address)
 }
 
-func (ms *MemoryStorage) ReadAll() []models.Transaction {
+func (ms *MemoryStorage) ReadAllTransactions() []models.Transaction {
 	ms.mx.RLock()
 	defer ms.mx.RUnlock()
 	all := make([]models.Transaction, 0)
