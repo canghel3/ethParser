@@ -66,13 +66,16 @@ func (ep *EthereumParser) Subscribe(address string) bool {
 	return false
 }
 
+// subscriber is a background process that searches the latest block transactions and
+// saves each transaction matching the given address as the sender or receiver of it.
 func (ep *EthereumParser) subscriber(address string) {
 	var previous string
 
 	defer func() {
+		//in case the function panics, restart it and print the panic
 		if r := recover(); r != nil {
 			go ep.subscriber(address)
-			log.Printf("subcriber for %s panicked: %v", address, r)
+			log.Printf("subcriber %s panic: %v", address, r)
 		}
 	}()
 
@@ -89,18 +92,19 @@ func (ep *EthereumParser) subscriber(address string) {
 	}
 }
 
+// getBlockByNumber requests specific block information using its hex identifier
 func (ep *EthereumParser) getBlockByNumber(hex string) *models.BlockByNumber {
 	content := fmt.Sprintf(`{"jsonrpc": "2.0","method":"eth_getBlockByNumber","params":["%s",true],"id":0}`, hex)
 	request, err := http.NewRequest("POST", ethereumRPCUrl, strings.NewReader(content))
 	if err != nil {
-		log.Printf("eth_getBlockByNumber err:%v", err)
+		log.Printf("getBlockByNumber err:%v", err)
 		return nil
 	}
 
 	request.Header.Set("Content-Type", "application/json")
 	response, err := ep.client.Do(request)
 	if err != nil {
-		log.Printf("eth_getBlockByNumber err:%v", err)
+		log.Printf("getBlockByNumber err:%v", err)
 		return nil
 	}
 	defer response.Body.Close()
@@ -108,7 +112,7 @@ func (ep *EthereumParser) getBlockByNumber(hex string) *models.BlockByNumber {
 	var result models.BlockByNumber
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
-		log.Printf("eth_getBlockByNumber err:%v", err)
+		log.Printf("getBlockByNumber err:%v", err)
 		return nil
 	}
 
@@ -117,7 +121,7 @@ func (ep *EthereumParser) getBlockByNumber(hex string) *models.BlockByNumber {
 
 func (ep *EthereumParser) processBlockTransactions(address string, transactions []models.Transaction) {
 	for _, transaction := range transactions {
-		//process sending and receiving separately for future-proofing
+		//process sending and receiving separately
 		if transaction.To == address {
 			err := ep.registry.Add(address, transaction)
 			if err != nil {
@@ -136,29 +140,33 @@ func (ep *EthereumParser) processBlockTransactions(address string, transactions 
 	}
 }
 
+// updateBlockNumber periodically sends JSONRPC request to update the latest block
 func (ep *EthereumParser) updateBlockNumber() {
+	//The block time in Ethereum is designed to be approximately 15 seconds. However, it is important to note that block time can vary slightly due to factors such as network congestion and mining difficulty adjustments.
 	refreshRate := 5 * time.Second
-	sleepTime := 10 * time.Second
+	sleepTime := 5 * time.Second
+
 	for {
 		func() {
 			defer func() {
+				//in case the function panics, restart it and print the panic
 				if r := recover(); r != nil {
 					go ep.updateBlockNumber()
-					log.Printf("updateBlockNumber panicked with %v", r)
+					log.Printf("updateBlockNumber panic: %v", r)
 				}
 			}()
 
 			content := `{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":0}`
 			request, err := http.NewRequest(http.MethodPost, ethereumRPCUrl, strings.NewReader(content))
 			if err != nil {
-				log.Printf("eth_blockNumber err: %s", err)
+				log.Printf("updateBlockNumber err: %s", err)
 				time.Sleep(sleepTime)
 				return
 			}
 
 			response, err := ep.client.Do(request)
 			if err != nil {
-				log.Printf("eth_blockNumber err: %s", err)
+				log.Printf("updateBlockNumber err: %s", err)
 				time.Sleep(sleepTime)
 				return
 			}
@@ -167,14 +175,14 @@ func (ep *EthereumParser) updateBlockNumber() {
 			var blockNumber models.BlockNumber
 			err = json.NewDecoder(response.Body).Decode(&blockNumber)
 			if err != nil {
-				log.Printf("eth_blockNumber err: %s", err)
+				log.Printf("updateBlockNumber err: %s", err)
 				time.Sleep(sleepTime)
 				return
 			}
 
 			parsedInt, err := strconv.ParseInt(blockNumber.Result[2:], 16, 64)
 			if err != nil {
-				log.Printf("eth_blockNumber err: %s", err)
+				log.Printf("updateBlockNumber err: %s", err)
 				time.Sleep(sleepTime)
 				return
 			}
