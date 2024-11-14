@@ -2,8 +2,8 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/canghel3/ethereumBlockchainParser/blockchain"
-	"github.com/canghel3/ethereumBlockchainParser/models"
+	"github.com/canghel3/ethParser/blockchain"
+	"github.com/canghel3/ethParser/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"

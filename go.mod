@@ -1,3 +1,3 @@
-module github.com/canghel3/ethereumBlockchainParser
+module github.com/canghel3/ethParser
 
 go 1.23.2

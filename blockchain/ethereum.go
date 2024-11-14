@@ -3,8 +3,8 @@ package blockchain
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/canghel3/ethereumBlockchainParser/models"
-	"github.com/canghel3/ethereumBlockchainParser/storage"
+	"github.com/canghel3/ethParser/models"
+	"github.com/canghel3/ethParser/storage"
 	"log"
 	"net/http"
 	"strconv"

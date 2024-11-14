@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/canghel3/ethereumBlockchainParser/models"
+	"github.com/canghel3/ethParser/models"
 	"testing"
 )
 

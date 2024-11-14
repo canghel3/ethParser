@@ -1,6 +1,6 @@
 package blockchain
 
-import "github.com/canghel3/ethereumBlockchainParser/models"
+import "github.com/canghel3/ethParser/models"
 
 type Parser interface {
 	// last parsed block

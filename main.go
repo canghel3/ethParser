@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/canghel3/ethereumBlockchainParser/api"
+	"github.com/canghel3/ethParser/api"
 )
 
 func main() {

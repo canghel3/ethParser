@@ -2,7 +2,7 @@ package storage
 
 import (
 	"fmt"
-	"github.com/canghel3/ethereumBlockchainParser/models"
+	"github.com/canghel3/ethParser/models"
 	"sync"
 )
 
